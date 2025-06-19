@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 // Configure CORS to allow requests from Vercel frontend
 app.use(cors({
-  origin: 'https://video-nx4s867d4-mustafas-projects-33b93b3d.vercel.app',
+  origin: 'https://video-one-mocha.vercel.app/',
 }));
 app.use(express.json());
 
