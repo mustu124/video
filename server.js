@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const ffmpeg = require('fluent-ffmpeg');
@@ -12,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 // Configure CORS to allow requests from Vercel frontend
 app.use(cors({
-  origin: 'https://video-nx4s867d4-mustafas-projects-33b93b3d.vercel.app/', // Replace with your Vercel app URL
+  origin: 'https://video-nx4s867d4-mustafas-projects-33b93b3d.vercel.app',
 }));
 app.use(express.json());
 
@@ -30,7 +31,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'sadikot5580@gmail.com',
-    pass: 'lxldmwcvjvqicwgc', // Replace with your Gmail App Password
+    pass: process.env.GMAIL_PASS,
   },
 });
 
@@ -44,13 +45,12 @@ app.post('/api/process-video', upload.single('video'), async (req, res) => {
     await new Promise((resolve, reject) => {
       ffmpeg(videoPath)
         .screenshots({
-          count: 0, // Will be overridden by timemarks
-          timemarks: [], // Will be populated dynamically
+          count: 0,
+          timemarks: [],
           folder: outputDir,
           filename: 'screenshot-%03d.png',
         })
         .on('start', () => {
-          // Dynamically set timemarks based on video duration
           ffmpeg.ffprobe(videoPath, (err, metadata) => {
             if (err) return reject(err);
             const duration = metadata.format.duration;
@@ -90,7 +90,6 @@ app.post('/api/process-video', upload.single('video'), async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     // Generate public download URL
-    // Note: Render doesn't provide built-in file hosting, so we serve the file temporarily
     const downloadUrl = `https://your-render-backend.onrender.com/downloads/${req.file.filename}.zip`;
 
     // Clean up video file
@@ -110,9 +109,7 @@ app.get('/downloads/:filename', async (req, res) => {
     await fs.access(filePath);
     res.download(filePath, (err) => {
       if (!err) {
-        // Clean up ZIP file after download
         fs.unlink(filePath).catch(console.error);
-        // Clean up screenshot directory
         fs.rm(path.join(__dirname, 'screenshots', req.params.filename.replace('.zip', '')), { recursive: true }).catch(console.error);
       }
     });
